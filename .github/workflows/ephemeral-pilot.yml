@@ -1,0 +1,38 @@
+name: Ephemeral Package Pilot
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 'Non-sensitive opaque job identifier'
+        required: false
+        default: 'PILOT-001'
+permissions:
+  contents: read
+jobs:
+  isolated-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Generate synthetic result
+        env:
+          JOB_ID: ${{ inputs.job_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python - <<'PY'
+          import json, os, pathlib, re
+          job = os.environ.get("JOB_ID", "PILOT-001")
+          if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", job):
+              raise SystemExit("Invalid opaque job identifier")
+          pathlib.Path("output/result.json").write_text(
+              json.dumps({"schema":1,"job_id":job,"status":"PILOT_OK","source":"synthetic"},sort_keys=True)+"\n",
+              encoding="utf-8")
+          PY
+          (cd output && sha256sum result.json > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+      - name: Upload temporary result
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-result-${{ github.run_id }}
+          path: output/
+          retention-days: 1
+          if-no-files-found: error
