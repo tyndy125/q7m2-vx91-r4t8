@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "job_id": "PUBLIC-COOLDOWN-00001",
+  "validation_gate": "UNIT",
+  "public_release_approved": true,
+  "integration_policy": "WINDOWS_VALIDATE_ONLY",
+  "files": [
+    {
+      "path": "modules/cooldowns.py",
+      "sha256": "4eaae71325d0751cdde8bf3624c9e8886c7db8b4ff281cc4eb4f0bcc5d46def0"
+    },
+    {
+      "path": "tests/test_cooldowns.py",
+      "sha256": "bf94aea84650a2fc33ebb2d48fd41e73ffe0010858325cbb0b769a8a9690f49d"
+    }
+  ]
+}
