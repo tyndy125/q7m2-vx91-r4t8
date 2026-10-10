@@ -1,0 +1,39 @@
+name: Isolated Real Code Package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run isolated unit tests
+        run: python -m unittest discover -s pilot-src -p 'test_*.py' -v
+      - name: Package real module with integrity and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          cp pilot-src/asset_manifest.py output/asset_manifest.py
+          cp pilot-src/test_asset_manifest.py output/test_asset_manifest.py
+          python - <<'PY'
+          import json, pathlib
+          pathlib.Path("output/manifest.json").write_text(json.dumps({
+            "schema":1,
+            "job_id":"PUBLIC-ASSET-MANIFEST-20261010-0001",
+            "status":"UNIT_TESTED",
+            "files":["asset_manifest.py","test_asset_manifest.py"],
+            "target_paths":["client-core/elysium/asset_manifest.py","client-core/tests/test_asset_manifest.py"],
+            "integration_policy":"WINDOWS_VALIDATE_ONLY",
+            "source":"public-isolated-runner"
+          },indent=2)+"\n")
+          PY
+          (cd output && sha256sum asset_manifest.py test_asset_manifest.py manifest.json > SHA256SUMS.txt && sha256sum --check SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: real-code-package-${{ github.run_id }}
+          path: output/
+          retention-days: 1
+          if-no-files-found: error
