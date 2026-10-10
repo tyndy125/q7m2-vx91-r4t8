@@ -1,6 +1,11 @@
 name: Auto-merge approved factory PRs
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Public Isolated Batch']
+    types: [completed]
+  issues:
+    types: [labeled]
   schedule:
     - cron: '2,17,32,47 * * * *'
 permissions:
@@ -8,6 +13,9 @@ permissions:
   pull-requests: write
 jobs:
   merge:
+    if: >-
+      github.event_name != 'issues' ||
+      (github.event.label.name == 'factory-auto-merge' && github.event.issue.pull_request != null)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
