@@ -19,7 +19,7 @@ class DomainPackageTests(unittest.TestCase):
             sys.modules[package.name]=pkg
             package.loader.exec_module(pkg)
             result=pkg.build(dest,pathlib.Path(d)/"dist")
-            self.assertIn("PUBLIC-COOLDOWN-DOMAIN-00001",[j["job_id"] for j in result["jobs"]])
+            self.assertEqual(set(m.DOMAINS.values()) and {v[0] for v in m.DOMAINS.values()}, {j["job_id"] for j in result["jobs"] if j["job_id"] in {v[0] for v in m.DOMAINS.values()}})
     def test_refuses_overwrite(self):
         with tempfile.TemporaryDirectory() as d:
             dest=pathlib.Path(d)/"jobs"
