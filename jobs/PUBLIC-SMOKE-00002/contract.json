@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "job_id": "PUBLIC-SMOKE-00002",
+  "validation_gate": "UNIT",
+  "public_release_approved": true,
+  "integration_policy": "WINDOWS_VALIDATE_ONLY",
+  "files": [
+    {
+      "path": "modules/bounds.py",
+      "sha256": "1c648625ffcf37ebb89a6db2332ddc9e7c8b6e71bbf1acbb5d48e336e7fa4dd7"
+    },
+    {
+      "path": "tests/test_bounds.py",
+      "sha256": "9e081d8810338a431acd7683af01cd7dc0a9ca94427113dc42623a335c4d031e"
+    }
+  ]
+}
