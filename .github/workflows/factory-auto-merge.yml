@@ -2,7 +2,7 @@ name: Auto-merge approved factory PRs
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '2,17,32,47 * * * *'
 permissions:
   contents: write
   pull-requests: write
