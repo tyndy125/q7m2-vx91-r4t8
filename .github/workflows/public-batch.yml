@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'jobs/**'
+      - 'factory/**'
+      - '.github/workflows/public-batch.yml'
   pull_request:
     paths:
       - "factory/**"
