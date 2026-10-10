@@ -28,6 +28,9 @@ jobs:
           python-version: "3.12"
       - name: Unit tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Test approved public jobs and write full reports
+        if: ${{ github.event_name != 'pull_request' }}
+        run: python factory/run_batch_tests.py --source jobs --output dist/test-reports
       - name: Package explicitly approved public jobs
         if: ${{ github.event_name != 'pull_request' }}
         run: |
