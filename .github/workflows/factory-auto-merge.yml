@@ -1,0 +1,50 @@
+name: Auto-merge approved factory PRs
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Merge only explicitly labeled, green, isolated public factory PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os,subprocess,sys
+          def gh(*args):
+              p=subprocess.run(["gh","api",*args],capture_output=True,text=True)
+              if p.returncode:
+                  raise RuntimeError(p.stderr)
+              return json.loads(p.stdout) if p.stdout.strip() else {}
+          repo=os.environ["GH_REPO"]
+          prs=gh(f"repos/{repo}/pulls?state=open&per_page=100")
+          for pr in sorted(prs,key=lambda p:p["number"]):
+              number=pr["number"]
+              labels={x["name"] for x in gh(f"repos/{repo}/issues/{number}/labels")}
+              if "factory-auto-merge" not in labels:continue
+              if pr["head"]["repo"]["full_name"]!=repo:continue
+              if not pr["head"]["ref"].startswith("factory/"):continue
+              if pr["draft"] or pr["base"]["ref"]!="main":continue
+              details=gh(f"repos/{repo}/pulls/{number}")
+              if details.get("mergeable") is not True:continue
+              files=gh(f"repos/{repo}/pulls/{number}/files?per_page=100")
+              if len(files)==100 or not files:continue
+              allowed=lambda f:f.startswith(("factory/domains/","tests/test_")) and f.endswith(".py")
+              if any(not allowed(f["filename"]) or f["status"] not in ("added","modified") for f in files):continue
+              sha=details["head"]["sha"]
+              runs=gh(f"repos/{repo}/actions/runs?head_sha={sha}&per_page=100")["workflow_runs"]
+              checks=[r for r in runs if r["name"]=="Public Isolated Batch" and r["event"]=="pull_request" and r["head_sha"]==sha]
+              if not checks or any(r["status"]!="completed" or r["conclusion"]!="success" for r in checks):continue
+              # No privileged execution of PR code: only merge after read-only CI succeeds.
+              result=gh("-X","PUT",f"repos/{repo}/pulls/{number}/merge","-f","merge_method=squash","-f",f"sha={sha}")
+              print(json.dumps({"pr":number,"merged":result.get("merged",False)}))
+          PY
