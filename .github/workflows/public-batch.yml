@@ -30,9 +30,12 @@ jobs:
           python-version: "3.12"
       - name: Unit tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Prepare complete approved cooldown domain
+        if: ${{ github.event_name != 'pull_request' }}
+        run: python factory/prepare_approved_domain.py
       - name: Test approved public jobs and write full reports
         if: ${{ github.event_name != 'pull_request' }}
-        run: python factory/run_batch_tests.py --source jobs --output reports
+        run: python factory/run_batch_tests.py --source build/jobs --output reports
       - name: Upload test reports even on test failure
         if: ${{ always() && github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v4
@@ -45,7 +48,7 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: |
           if [ -d jobs ] && find jobs -mindepth 2 -maxdepth 2 -name contract.json | grep -q .; then
-            python factory/package_batch.py --source jobs --output dist --limit 16
+            python factory/package_batch.py --source build/jobs --output dist --limit 16
           else
             echo "No approved public jobs; no artifact to upload."
           fi
