@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "job_id": "PUBLIC-SMOKE-00001",
+  "validation_gate": "UNIT",
+  "public_release_approved": true,
+  "integration_policy": "WINDOWS_VALIDATE_ONLY",
+  "files": [
+    {
+      "path": "modules/name_utils.py",
+      "sha256": "7f2d3851c87e85b1a7c25b9addab219680c7280338248d5fba74c1f98b9583d8"
+    },
+    {
+      "path": "tests/test_name_utils.py",
+      "sha256": "1c1add64b89af2590e81aff888e9ee46f4ceb104f8347e697dce71506900a766"
+    }
+  ]
+}
