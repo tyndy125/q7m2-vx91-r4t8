@@ -47,14 +47,13 @@ def run(source,output):
         start=time.monotonic()
         env={"PATH":os.environ.get("PATH",""),"PYTHONPATH":str(folder.resolve()),"PYTHONDONTWRITEBYTECODE":"1"}
         # Run simple zero-argument test_* functions and unittest suites; reject zero tests.
-        runner = """import pathlib,runpy,unittest,sys
+        runner = """import pathlib,runpy
 count=0
 for f in sorted(pathlib.Path('tests').glob('test_*.py')):
  ns=runpy.run_path(str(f))
  for name,fn in sorted(ns.items()):
   if name.startswith('test_') and callable(fn):
    fn();count+=1
- suite=unittest.defaultTestLoader.loadTestsFromModule(type(sys)('job_tests'))
 print('EXECUTED_TESTS='+str(count))
 if count==0: raise RuntimeError('No executable test functions found')
 """
