@@ -30,7 +30,15 @@ jobs:
         run: python -m unittest discover -s tests -p "test_*.py" -v
       - name: Test approved public jobs and write full reports
         if: ${{ github.event_name != 'pull_request' }}
-        run: python factory/run_batch_tests.py --source jobs --output dist/test-reports
+        run: python factory/run_batch_tests.py --source jobs --output reports
+      - name: Upload test reports even on test failure
+        if: ${{ always() && github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-test-reports-${{ github.run_id }}
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Package explicitly approved public jobs
         if: ${{ github.event_name != 'pull_request' }}
         run: |
