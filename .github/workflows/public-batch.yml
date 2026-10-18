@@ -38,12 +38,13 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: python factory/run_batch_tests.py --source build/jobs --output reports
       - name: Bound public report storage
+        id: report_storage_budget
         if: ${{ always() && github.event_name != 'pull_request' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: python factory/artifact_budget.py reports
       - name: Upload test reports even on test failure
-        if: ${{ always() && github.event_name != 'pull_request' }}
+        if: ${{ always() && github.event_name != 'pull_request' && steps.report_storage_budget.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: public-test-reports-${{ github.run_id }}
