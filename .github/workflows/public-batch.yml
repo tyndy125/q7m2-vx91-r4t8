@@ -14,9 +14,10 @@ on:
       - ".github/workflows/public-batch.yml"
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: public-isolated-batch-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -36,14 +37,20 @@ jobs:
       - name: Test approved public jobs and write full reports
         if: ${{ github.event_name != 'pull_request' }}
         run: python factory/run_batch_tests.py --source build/jobs --output reports
-      - name: Upload test reports even on test failure
+      - name: Bound public report storage
+        id: report_storage_budget
         if: ${{ always() && github.event_name != 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python factory/artifact_budget.py reports
+      - name: Upload test reports even on test failure
+        if: ${{ always() && github.event_name != 'pull_request' && steps.report_storage_budget.outcome == 'success' }}
         uses: actions/upload-artifact@v4
         with:
           name: public-test-reports-${{ github.run_id }}
           path: reports/
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 1
       - name: Package explicitly approved public jobs
         if: ${{ github.event_name != 'pull_request' }}
         run: |
@@ -52,6 +59,11 @@ jobs:
           else
             echo "No approved public jobs; no artifact to upload."
           fi
+      - name: Bound public package storage
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python factory/artifact_budget.py dist
       - name: Upload isolated packages
         if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v4

@@ -1,0 +1,2 @@
+# Approved public contract digests cover exact Git blob bytes on every platform.
+jobs/** -text

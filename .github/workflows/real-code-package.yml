@@ -1,14 +1,20 @@
 name: Isolated Real Code Package
 on:
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
+  actions: read
 jobs:
   test-and-package:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run isolated unit tests
         run: python -m unittest discover -s pilot-src -p 'test_*.py' -v
       - name: Package real module with integrity and metadata
@@ -31,6 +37,10 @@ jobs:
           },indent=2)+"\n")
           PY
           (cd output && sha256sum asset_manifest.py test_asset_manifest.py manifest.json > SHA256SUMS.txt && sha256sum --check SHA256SUMS.txt)
+      - name: Bound public package storage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python factory/artifact_budget.py output
       - uses: actions/upload-artifact@v4
         with:
           name: real-code-package-${{ github.run_id }}
