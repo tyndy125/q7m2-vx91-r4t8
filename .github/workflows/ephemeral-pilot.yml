@@ -6,6 +6,9 @@ on:
         description: 'Non-sensitive opaque job identifier'
         required: false
         default: 'PILOT-001'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -29,10 +32,5 @@ jobs:
               encoding="utf-8")
           PY
           (cd output && sha256sum result.json > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
-      - name: Upload temporary result
-        uses: actions/upload-artifact@v4
-        with:
-          name: pilot-result-${{ github.run_id }}
-          path: output/
-          retention-days: 1
-          if-no-files-found: error
+      - name: Record synthetic checksum without artifact storage
+        run: cat output/SHA256SUMS.txt >> "$GITHUB_STEP_SUMMARY"
